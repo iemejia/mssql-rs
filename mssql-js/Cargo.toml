@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
 napi = { version = "2.16.17", default-features = false, features = ["napi4", "async", "tokio_rt", "chrono_date", "napi6", "compat-mode"] }
 napi-derive = "2.16.13"
-mssql-tds = { path = "../mssql-tds" }
+mssql-tds = { path = "../mssql-tds", package = "mssql-tds-preview" }
 tokio = { version = "1.48.0", features = ["full"] }
 chrono = "0.4.42"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }

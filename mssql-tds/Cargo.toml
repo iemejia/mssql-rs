@@ -1,12 +1,16 @@
 [package]
-name = "mssql-tds"
+name = "mssql-tds-preview"
 version = "0.1.0"
 edition = "2024"
-description = "Rust implementation of the TDS (Tabular Data Stream) protocol for SQL Server"
+description = "Rust implementation of the TDS (Tabular Data Stream) protocol for SQL Server. Publishable fork of microsoft/mssql-rs until the official crate lands on crates.io."
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/saurabh500/mssql-rs"
 keywords = ["sql-server", "tds", "mssql", "database", "async"]
 categories = ["database", "network-programming"]
+
+[lib]
+name = "mssql_tds"
 
 [features]
 default = ["integrated-auth"]
