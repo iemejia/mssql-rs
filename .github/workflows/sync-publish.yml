@@ -19,9 +19,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  sync-and-publish:
-    name: Sync upstream & publish
+  sync:
+    name: Sync upstream
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.merge.outputs.changed }}
+      should_publish: ${{ steps.decide.outputs.should_publish }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,7 +55,7 @@ jobs:
         run: |
           git checkout fork
           BEFORE=$(git rev-parse HEAD)
-          
+
           # Merge main, auto-resolve Cargo.toml conflicts by keeping fork's version
           if git merge main --no-edit; then
             echo "merge=clean" >> $GITHUB_OUTPUT
@@ -72,7 +76,7 @@ jobs:
             git commit --no-edit
             echo "merge=resolved" >> $GITHUB_OUTPUT
           fi
-          
+
           AFTER=$(git rev-parse HEAD)
           if [ "$BEFORE" = "$AFTER" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -80,65 +84,88 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Decide whether to publish
+        id: decide
+        run: |
+          if [ "${{ steps.merge.outputs.changed }}" = "true" ] || [ "${{ inputs.force_publish }}" = "true" ]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "No upstream changes. Skipping publish."
+          fi
+
+  publish:
+    name: Publish mssql-tds-preview
+    needs: sync
+    if: needs.sync.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: crates-io
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fork
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "saurabh500"
+          git config user.email "saurabh500@gmail.com"
+
+      - name: Pull latest fork
+        run: git pull origin fork
+
       - name: Determine version
         id: version
         run: |
           # Get upstream version
           UPSTREAM_VER=$(grep '^version' mssql-tds/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/' | sed 's/-preview\..*//')
           echo "upstream=$UPSTREAM_VER" >> $GITHUB_OUTPUT
-          
+
           # Get current preview number
           CURRENT_FULL=$(grep '^version' mssql-tds/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
           CURRENT_PREVIEW=$(echo "$CURRENT_FULL" | grep -oP 'preview\.\K[0-9]+' || echo "0")
-          
+
           # Determine next preview number
           if [ -n "${{ inputs.preview_bump }}" ]; then
             NEXT_PREVIEW="${{ inputs.preview_bump }}"
           else
             NEXT_PREVIEW=$((CURRENT_PREVIEW + 1))
           fi
-          
+
           NEW_VER="${UPSTREAM_VER}-preview.${NEXT_PREVIEW}"
           echo "new=$NEW_VER" >> $GITHUB_OUTPUT
           echo "Version: $NEW_VER"
 
       - name: Update version
-        if: steps.merge.outputs.changed == 'true' || inputs.force_publish
         run: |
           NEW_VER="${{ steps.version.outputs.new }}"
           sed -i "s/^version = \".*\"/version = \"$NEW_VER\"/" mssql-tds/Cargo.toml
-          
+
           # Ensure name and lib section are correct
           grep -q 'name = "mssql-tds-preview"' mssql-tds/Cargo.toml || \
             sed -i 's/^name = "mssql-tds"/name = "mssql-tds-preview"/' mssql-tds/Cargo.toml
           grep -q '^\[lib\]' mssql-tds/Cargo.toml || \
             sed -i '/^\[features\]/i [lib]\nname = "mssql_tds"\n' mssql-tds/Cargo.toml
-          
+
           git add -A
           git commit -m "Bump to $NEW_VER" || true
           git push origin fork
 
       - name: Install Rust
-        if: steps.merge.outputs.changed == 'true' || inputs.force_publish
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install system deps
-        if: steps.merge.outputs.changed == 'true' || inputs.force_publish
         run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libkrb5-dev
 
       - name: Verify build
-        if: steps.merge.outputs.changed == 'true' || inputs.force_publish
         run: cargo check -p mssql-tds-preview
 
       - name: Publish to crates.io
-        if: steps.merge.outputs.changed == 'true' || inputs.force_publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           cd mssql-tds
           cargo publish --allow-dirty
-          echo "Published mssql-tds-preview ${{ steps.version.outputs.new }}"
-
-      - name: No changes
-        if: steps.merge.outputs.changed == 'false' && !inputs.force_publish
-        run: echo "No upstream changes. Skipping publish."
+          echo "✅ Published mssql-tds-preview ${{ steps.version.outputs.new }}"
