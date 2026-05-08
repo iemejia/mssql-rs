@@ -1,63 +1,53 @@
-# mssql-tds
+# mssql-tds-preview
 
-Async Rust implementation of the TDS (Tabular Data Stream) protocol for SQL Server
-and Azure SQL Database.
+**Publishable fork of [`microsoft/mssql-rs`](https://github.com/microsoft/mssql-rs) for crates.io distribution.**
 
-## What it does
+This crate is a **temporary, unmodified fork** of Microsoft's `mssql-tds` — the official Rust implementation of the TDS (Tabular Data Stream) protocol for SQL Server. No code changes are made; only the package name is different to allow publishing to crates.io.
 
-Low-level TDS client handling connection negotiation (prelogin, TLS, login7),
-query execution, result set streaming, bulk copy, RPC calls, and transaction
-management. Built on Tokio.
+## ⚠️ This crate will be yanked
 
-## Feature flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `integrated-auth` | **yes** | Enables both `sspi` and `gssapi` |
-| `sspi` | via `integrated-auth` | Windows SSPI (Kerberos/NTLM) |
-| `gssapi` | via `integrated-auth` | Unix GSSAPI (Kerberos) via runtime `dlopen` |
-
-Disable the default to drop platform-specific auth dependencies:
+Once Microsoft publishes the official `mssql-tds` crate to crates.io, this preview fork will be **yanked** and all users should migrate to the official crate:
 
 ```toml
-mssql-tds = { version = "0.1", default-features = false }
+# Before (preview fork)
+mssql-tds-preview = "=0.1.0-preview.1"
+
+# After (official — when available)
+mssql-tds = "0.1"
 ```
 
-## Quick start
+The API is identical — `use mssql_tds::...` imports work the same with both crates. Migration requires only a `Cargo.toml` change.
 
-```rust,no_run
-use mssql_tds::connection::client_context::ClientContext;
-use mssql_tds::connection::tds_client::ResultSetClient;
-use mssql_tds::connection_provider::tds_connection_provider::TdsConnectionProvider;
-use mssql_tds::core::TdsResult;
+## Why does this exist?
 
-#[tokio::main]
-async fn main() -> TdsResult<()> {
-    let mut context = ClientContext::default();
-    context.user_name = std::env::var("DB_USER").unwrap_or("<user>".into());
-    context.password = std::env::var("DB_PASSWORD").unwrap_or("<password>".into());
-    context.database = "master".into();
+- `mssql-tds` is not yet published to crates.io
+- Crates that depend on it (like [`mssql-tiberius-bridge`](https://github.com/saurabh500/mssql-tiberius-bridge)) cannot be published to crates.io with a git dependency
+- This fork bridges the gap until the official publish
 
-    let provider = TdsConnectionProvider {};
-    let mut client = provider
-        .create_client(context, "tcp:localhost,1433", None)
-        .await?;
+## Versioning
 
-    client
-        .execute("SELECT 1 AS value".into(), None, None)
-        .await?;
+Versions follow the scheme `{upstream_version}-preview.{N}`:
 
-    if let Some(rs) = client.get_current_resultset() {
-        while let Some(row) = rs.next_row().await? {
-            println!("{row:?}");
-        }
-    }
+- `0.1.0-preview.1` — based on upstream `0.1.0`, first preview release
+- `0.1.0-preview.2` — same upstream version, updated preview
+- `0.2.0-preview.1` — based on upstream `0.2.0`
 
-    client.close_query().await?;
-    Ok(())
-}
+Pin exact versions in your `Cargo.toml`:
+
+```toml
+mssql-tds-preview = "=0.1.0-preview.1"
 ```
+
+## Sync with upstream
+
+The `fork` branch is automatically synced with `microsoft/mssql-rs` main via a daily GitHub Action. The `main` branch is a clean mirror of upstream.
 
 ## License
 
-MIT
+MIT — same as the upstream `microsoft/mssql-rs`.
+
+## Links
+
+- **Upstream:** https://github.com/microsoft/mssql-rs
+- **This fork:** https://github.com/saurabh500/mssql-rs
+- **Bridge crate:** https://github.com/saurabh500/mssql-tiberius-bridge
