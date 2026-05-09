@@ -46,7 +46,7 @@ jobs:
 
       - name: Sync main branch
         run: |
-          git checkout main
+          git checkout -B main origin/main
           git merge upstream/main --no-edit
           git push origin main
 
