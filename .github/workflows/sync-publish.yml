@@ -64,6 +64,10 @@ jobs:
                 # Re-apply our name and lib section
                 sed -i 's/^name = "mssql-tds"/name = "mssql-tds-preview"/' mssql-tds/Cargo.toml
                 git add "$f"
+              elif [[ "$f" == .github/workflows/* ]]; then
+                # Keep fork's version of workflow files
+                git checkout --ours "$f"
+                git add "$f"
               else
                 echo "::error::Unexpected conflict in $f"
                 exit 1
