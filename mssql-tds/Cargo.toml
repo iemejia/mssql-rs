@@ -1,6 +1,6 @@
 [package]
 name = "mssql-tds-preview"
-version = "0.1.0-preview.1"
+version = "0.1.0-preview.2"
 edition = "2024"
 description = "Rust implementation of the TDS (Tabular Data Stream) protocol for SQL Server. Publishable fork of microsoft/mssql-rs until the official crate lands on crates.io."
 license = "MIT"
@@ -64,7 +64,7 @@ windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System_Libr
 libc = "0.2"
 
 [dependencies.uuid]
-version = "1.19.0"
+version = "0.1.0-preview.2"
 features = [
     "v4",                # Lets you generate random UUIDs
     "fast-rng",          # Use a faster (but still sufficiently random) RNG
