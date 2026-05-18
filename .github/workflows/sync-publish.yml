@@ -145,7 +145,7 @@ jobs:
       - name: Update version
         run: |
           NEW_VER="${{ steps.version.outputs.new }}"
-          sed -i "s/^version = \".*\"/version = \"$NEW_VER\"/" mssql-tds/Cargo.toml
+          sed -i "0,/^version = \".*\"/{s/^version = \".*\"/version = \"$NEW_VER\"/}" mssql-tds/Cargo.toml
 
           # Ensure name and lib section are correct
           grep -q 'name = "mssql-tds-preview"' mssql-tds/Cargo.toml || \
