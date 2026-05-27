@@ -9,7 +9,7 @@
 
 use crate::core::TdsResult;
 use crate::error::Error;
-#[cfg(feature = "native-tls-backend")]
+#[cfg(all(feature = "native-tls-backend", not(feature = "rustls-backend")))]
 use native_tls::Certificate;
 use std::fs;
 use std::path::Path;
@@ -41,7 +41,7 @@ pub fn load_certificate_from_file(path: &Path) -> TdsResult<Vec<u8>> {
     })?;
 
     // Try to parse as PEM first, fall back to DER
-    #[cfg(feature = "native-tls-backend")]
+    #[cfg(all(feature = "native-tls-backend", not(feature = "rustls-backend")))]
     {
         let certificate = Certificate::from_pem(&cert_data)
             .or_else(|_| {

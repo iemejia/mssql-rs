@@ -91,6 +91,6 @@ azure_core = "0.25.0"
 ctor = "0.4"
 mockall = "0.13.1"
 criterion = "0.5"
-mssql-mock-tds = { path = "../mssql-mock-tds" }
+mssql-mock-tds = { path = "../mssql-mock-tds", default-features = false }
 tempfile = "3.13"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }

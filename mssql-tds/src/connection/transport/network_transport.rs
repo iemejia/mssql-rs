@@ -5,7 +5,7 @@ use crate::connection::client_context::{IPAddressPreference, TransportContext};
 use crate::connection::transport::buffers::TdsReadBuffer;
 use crate::connection::transport::extractable_stream;
 use crate::connection::transport::parallel_connect::{ParallelConnectConfig, parallel_connect};
-#[cfg(feature = "native-tls-backend")]
+#[cfg(all(feature = "native-tls-backend", not(feature = "rustls-backend")))]
 use crate::connection::transport::ssl_handler::SslHandler;
 #[cfg(feature = "rustls-backend")]
 use crate::connection::transport::ssl_handler_rustls::SslHandler;
@@ -1402,7 +1402,7 @@ pub(crate) mod tests {
     use super::*; // Brings in NetworkTransport, SslHandler, StreamRecoverer, etc.
     use crate::connection::client_context::ClientContext;
     use crate::connection::transport::network_transport::Stream;
-    #[cfg(feature = "native-tls-backend")]
+    #[cfg(all(feature = "native-tls-backend", not(feature = "rustls-backend")))]
     use crate::connection::transport::ssl_handler::SslHandler;
     #[cfg(feature = "rustls-backend")]
     use crate::connection::transport::ssl_handler_rustls::SslHandler;
