@@ -107,15 +107,10 @@ pub fn load_certificate_from_file(path: &Path) -> TdsResult<Vec<u8>> {
 /// Try to parse PEM data and extract the first certificate as DER.
 #[cfg(feature = "rustls-backend")]
 fn try_load_pem_certificate(data: &[u8]) -> Option<Vec<u8>> {
-    use rustls_pemfile::certs;
-    use std::io::Cursor;
+    use rustls_pki_types::pem::PemObject;
+    use rustls_pki_types::CertificateDer;
 
-    let mut reader = Cursor::new(data);
-    let certs_result: Result<Vec<_>, _> = certs(&mut reader).collect();
-    match certs_result {
-        Ok(certs) if !certs.is_empty() => Some(certs[0].to_vec()),
-        _ => None,
-    }
+    CertificateDer::from_pem_slice(data).ok().map(|cert| cert.to_vec())
 }
 
 /// Check if a certificate has expired.
