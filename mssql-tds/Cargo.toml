@@ -18,7 +18,7 @@ gssapi = []
 integrated-auth = ["sspi", "gssapi"]
 # TLS backend selection (exactly one must be enabled)
 native-tls-backend = ["dep:native-tls", "dep:tokio-native-tls"]
-rustls-backend = ["dep:tokio-rustls", "dep:rustls", "dep:rustls-pemfile", "dep:rustls-native-certs", "dep:webpki-roots"]
+rustls-backend = ["dep:tokio-rustls", "dep:rustls", "dep:rustls-pki-types", "dep:rustls-native-certs", "dep:webpki-roots"]
 
 
 [lints]
@@ -32,7 +32,7 @@ native-tls = { version = "0.2.18", features = ["alpn"], optional = true }
 # rustls TLS backend (optional)
 tokio-rustls = { version = "0.26.4", optional = true }
 rustls = { version = "0.23.40", default-features = false, features = ["std", "tls12", "ring"], optional = true }
-rustls-pemfile = { version = "2.2.0", optional = true }
+rustls-pki-types = { version = "1.9", optional = true }
 rustls-native-certs = { version = "0.8.3", optional = true }
 webpki-roots = { version = "1.0.7", optional = true }
 futures = "0.3.31"
